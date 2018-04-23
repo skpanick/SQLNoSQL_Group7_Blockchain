@@ -1,4 +1,3 @@
-
 import hashlib
 import json
 from time import time
@@ -11,15 +10,18 @@ from flask import Flask, jsonify, request
 
 class Chain:
     def __init__(self):
-        self.free_transactions = []
-        self.chain = []
-        self.nodes = set()
-        self.add_block(previous_hash='1', nonce=100)
+        #Variables used in the chain
+        self.free_transactions = [] #Transactions which are yet to be put in a block
+        self.chain = [] #The blocks in the chain
+        self.nodes = set() #Noded in the network
+        self.add_block(previous_hash='1', nonce=100) #Add the genesis block
 
+    #Register a single new node    
     def node_register(self, address):
         self.nodes.add(address)
         #print(self.nodes)
 
+    #Add a block via mining
     def add_block(self, nonce, previous_hash):
         block = {
             'index': len(self.chain) + 1,
@@ -31,7 +33,7 @@ class Chain:
         self.free_transactions = []
         self.chain.append(block)
         return block
-
+    #New transaction
     def add_transaction(self, sender, receiver, value):
         self.free_transactions.append({
             'sender': sender,
@@ -45,32 +47,31 @@ class Chain:
         return self.chain[-1]
 
     @staticmethod
+    #Python implementation for SHA256 Hashing
     def hash(block):
         block_string = json.dumps(block, sort_keys=True).encode()
         return hashlib.sha256(block_string).hexdigest()
-
+    #Calculate the nonce as proof of work
     def proof_work(self, last_block):
         last_nonce = last_block['nonce']
         last_hash = self.hash(last_block)
-
         nonce = 0
         while self.valid_proof(last_nonce, nonce, last_hash) is False:
             nonce += 1
-
         return nonce
 
     @staticmethod
+    #Evalue the nonce is valid, static difficulty of 4 leading 0's
     def valid_proof(last_nonce, nonce, last_hash):
         guess = f'{last_nonce}{nonce}{last_hash}'.encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
         return guess_hash[:4] == "0000"
 
-
 app = Flask(__name__)
 node_identifier = str(uuid4()).replace('-', '')
 chain = Chain()
 
-
+#Mine a new block
 @app.route('/mine', methods=['GET'])
 def mine():
     last_block = chain.last_block
@@ -92,7 +93,7 @@ def mine():
     }
     return jsonify(response), 200
 
-
+#Add a new transaction
 @app.route('/transactions/add', methods=['POST'])
 def add_transaction():
     values = request.get_json()
@@ -103,7 +104,7 @@ def add_transaction():
     response = {'message': f'Transaction will be added to Block {index}'}
     return jsonify(response), 201
 
-
+#Get the chains details
 @app.route('/chain_info', methods=['GET'])
 def full_chain():
     response = {
@@ -112,7 +113,7 @@ def full_chain():
     }
     return jsonify(response), 200
 
-
+#Register a new node
 @app.route('/node/register', methods=['POST'])
 def node_register():
     values = request.get_json()
