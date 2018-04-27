@@ -11,10 +11,14 @@ from flask import Flask, jsonify, request
 class Chain:
     def __init__(self):
         #Variables used in the chain
-        self.free_transactions = [] #Transactions which are yet to be put in a block
-        self.chain = [] #The blocks in the chain
-        self.nodes = set() #Noded in the network
-        self.add_block(previous_hash='1', nonce=100) #Add the genesis block
+        #Transactions which are yet to be put in a block
+        self.free_transactions = [] 
+        #The blocks in the chain
+        self.chain = [] 
+        #Noded in the network
+        self.nodes = set() 
+        #Add the genesis block
+        self.add_block(previous_hash='1', nonce=100) 
 
     #Register a single new node    
     def node_register(self, address):
